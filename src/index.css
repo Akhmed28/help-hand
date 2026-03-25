@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 235 45% 5%;
+    --foreground: 0 0% 95%;
+
+    --card: 235 40% 8%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 235 40% 8%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 263 84% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 235 30% 14%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 235 25% 15%;
+    --muted-foreground: 235 10% 55%;
+
+    --accent: 263 84% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 235 20% 18%;
+    --input: 235 20% 18%;
+    --ring: 263 84% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 235 40% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 263 84% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 235 25% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 235 20% 18%;
+    --sidebar-ring: 263 84% 55%;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-2xl border border-white/15;
+  }
+
+  .glass-card {
+    @apply bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-xl shadow-black/10;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card:hover {
+    @apply border-primary/25 shadow-2xl;
+    box-shadow: 0 0 30px -8px hsl(263 84% 55% / 0.15), 0 20px 50px -12px hsl(0 0% 0% / 0.25);
+    transform: translateY(-2px);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 40px -10px hsl(263 84% 55% / 0.5);
+  }
+
+  .glow-purple-lg {
+    box-shadow: 0 0 80px -20px hsl(263 84% 55% / 0.4);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 50px -12px hsl(263 84% 55% / 0.6), 0 0 100px -20px hsl(263 84% 55% / 0.2);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-purple-400;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-gradient-hero {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(270 60% 85%) 50%, hsl(263 84% 65%) 100%);
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden font-semibold tracking-wide;
+    background: linear-gradient(135deg, hsl(263 84% 55%) 0%, hsl(280 80% 60%) 100%);
+    box-shadow: 0 4px 20px -4px hsl(263 84% 55% / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-premium:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 8px 30px -4px hsl(263 84% 55% / 0.6), inset 0 1px 0 hsl(0 0% 100% / 0.15);
+  }
+
+    .btn-premium:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .pulse-recording {
+      box-shadow: 0 0 0 0 hsl(0 84% 60% / 0.7);
+      animation: pulse-recording 1.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes pulse-recording {
+    0% {
+      box-shadow: 0 0 0 0 hsl(0 84% 60% / 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 8px hsl(0 84% 60% / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 hsl(0 84% 60% / 0);
+    }
+  }
+
+  /* HelpHand animations */
+  .helphand-pulse-red {
+    animation: helphand-pulse-red 1.4s ease-in-out infinite;
+  }
+
+  .helphand-pulse-purple {
+    animation: helphand-pulse-purple 1.6s ease-in-out infinite;
+  }
+
+  @keyframes helphand-pulse-red {
+    0% { box-shadow: 0 0 0 0 hsl(0 84% 60% / 0.6); }
+    70% { box-shadow: 0 0 0 12px hsl(0 84% 60% / 0); }
+    100% { box-shadow: 0 0 0 0 hsl(0 84% 60% / 0); }
+  }
+
+  @keyframes helphand-pulse-purple {
+    0% { box-shadow: 0 0 0 0 hsl(263 84% 55% / 0.5); }
+    50% { box-shadow: 0 0 0 10px hsl(263 84% 55% / 0); }
+    100% { box-shadow: 0 0 0 0 hsl(263 84% 55% / 0); }
+  }
