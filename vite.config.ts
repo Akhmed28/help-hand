@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "util": path.resolve(__dirname, "./src/shims/util.ts"),
     },
   },
 }));

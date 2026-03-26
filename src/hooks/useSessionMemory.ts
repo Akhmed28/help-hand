@@ -54,7 +54,7 @@ async function generateSummary(
   currentCode: string,
   previousMemory: SessionMemory
 ): Promise<Partial<SessionMemory> | null> {
-  const apiKey = settings.llmProvider === "openai" ? settings.openaiApiKey : settings.anthropicApiKey;
+  const apiKey = settings.openaiApiKey;
   if (!apiKey || chatMessages.length < 3) return null;
 
   // Build conversation excerpt (last 30 messages)
@@ -96,48 +96,25 @@ async function generateSummary(
   const userContent = `РАЗГОВОР ЭТОЙ СЕССИИ:\n${excerpt}\n\nТЕКУЩИЙ КОД (начало):\n${codeSummary}${previousContext}${previousDecisions}`;
 
   try {
-    let responseText: string;
-
-    if (settings.llmProvider === "anthropic" && settings.anthropicApiKey) {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": settings.anthropicApiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          system: systemPrompt,
-          messages: [{ role: "user", content: userContent }],
-          max_tokens: 512,
-        }),
-      });
-      if (!resp.ok) return null;
-      const data = await resp.json();
-      responseText = data.content?.[0]?.text ?? "";
-    } else {
-      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userContent },
-          ],
-          max_tokens: 512,
-          temperature: 0.3,
-        }),
-      });
-      if (!resp.ok) return null;
-      const data = await resp.json();
-      responseText = data.choices?.[0]?.message?.content ?? "";
-    }
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-5.2",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        max_completion_tokens: 512,
+        temperature: 0.3,
+      }),
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const responseText = data.choices?.[0]?.message?.content ?? "";
 
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
@@ -200,6 +177,8 @@ export function buildMemoryContext(memory: SessionMemory): string {
 export function useSessionMemory(settings: HelpHandSettings) {
   const [memory, setMemory] = useState<SessionMemory>(loadMemory);
   const savingRef = useRef(false);
+  const memoryRef = useRef(memory);
+  memoryRef.current = memory;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
@@ -224,33 +203,35 @@ export function useSessionMemory(settings: HelpHandSettings) {
       if (chatMessages.length < 3) return; // not enough context
       savingRef.current = true;
 
+      const currentMemory = memoryRef.current;
+
       try {
         console.log("[SessionMemory] Generating session summary...");
         const result = await generateSummary(
           settingsRef.current,
           chatMessages,
           currentCode,
-          memory
+          currentMemory
         );
 
         if (result) {
           const updated: SessionMemory = {
-            projectDescription: result.projectDescription || memory.projectDescription,
-            lastSessionSummary: result.lastSessionSummary || memory.lastSessionSummary,
+            projectDescription: result.projectDescription || currentMemory.projectDescription,
+            lastSessionSummary: result.lastSessionSummary || currentMemory.lastSessionSummary,
             // Merge decisions (keep old + add new, deduplicate)
             decisions: dedup([
-              ...memory.decisions,
+              ...currentMemory.decisions,
               ...(result.decisions || []),
             ]).slice(-10),
             // Replace open tasks with latest analysis
-            openTasks: (result.openTasks || memory.openTasks).slice(-10),
+            openTasks: (result.openTasks || currentMemory.openTasks).slice(-10),
             // Merge future plans
             futurePlans: dedup([
-              ...memory.futurePlans,
+              ...currentMemory.futurePlans,
               ...(result.futurePlans || []),
             ]).slice(-10),
             lastUpdated: new Date().toISOString(),
-            sessionCount: memory.sessionCount,
+            sessionCount: currentMemory.sessionCount,
           };
           saveMemory(updated);
           setMemory(updated);
@@ -262,7 +243,7 @@ export function useSessionMemory(settings: HelpHandSettings) {
         savingRef.current = false;
       }
     },
-    [memory]
+    []
   );
 
   const clearMemory = useCallback(() => {

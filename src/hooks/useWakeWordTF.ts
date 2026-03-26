@@ -19,6 +19,7 @@ export function useWakeWordTF({
   const onWakeRef = useRef(onWake);
   onWakeRef.current = onWake;
   const cooldownRef = useRef(false);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamingRef = useRef(false);
 
   // Load the model once
@@ -71,6 +72,9 @@ export function useWakeWordTF({
     // Already streaming — don't start again
     if (streamingRef.current) return;
 
+    // Mark as streaming immediately to prevent double-start from re-renders
+    streamingRef.current = true;
+
     const triggerWords = new Set(["go", "yes"]);
     const labels = recognizer.wordLabels() as string[];
 
@@ -87,8 +91,10 @@ export function useWakeWordTF({
           console.log(`[WakeWordTF] Detected "${word}" (${(maxScore * 100).toFixed(0)}%)`);
 
           cooldownRef.current = true;
-          setTimeout(() => {
+          if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+          cooldownTimerRef.current = setTimeout(() => {
             cooldownRef.current = false;
+            cooldownTimerRef.current = null;
           }, 3000);
 
           onWakeRef.current?.();
@@ -100,9 +106,10 @@ export function useWakeWordTF({
         invokeCallbackOnNoiseAndUnknown: false,
         overlapFactor: 0.5,
       }
-    );
+    ).catch(() => {
+      streamingRef.current = false;
+    });
 
-    streamingRef.current = true;
     setIsListening(true);
     console.log("[WakeWordTF] Listening for wake words:", [...triggerWords].join(", "));
 
@@ -118,6 +125,7 @@ export function useWakeWordTF({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
       if (streamingRef.current && recognizerRef.current) {
         recognizerRef.current.stopListening().catch(() => {});
         streamingRef.current = false;

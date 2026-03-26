@@ -26,9 +26,9 @@ async function callOpenAI(
     },
     signal,
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-5.2",
       messages: [{ role: "system", content: systemPrompt }, ...messages],
-      max_tokens: 1024,
+      max_completion_tokens: 1024,
       temperature: 0.7,
     }),
   });
@@ -42,50 +42,12 @@ async function callOpenAI(
   return data.choices?.[0]?.message?.content ?? "";
 }
 
-async function callAnthropic(
-  apiKey: string,
-  systemPrompt: string,
-  messages: HHMessage[],
-  signal?: AbortSignal
-): Promise<string> {
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    signal,
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      system: systemPrompt,
-      messages: messages.filter((m) => m.role !== "system").map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      max_tokens: 1024,
-    }),
-  });
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Anthropic API error: ${resp.status}`);
-  }
-
-  const data = await resp.json();
-  return data.content?.[0]?.text ?? "";
-}
-
 async function callLLM(
   settings: HelpHandSettings,
   systemPrompt: string,
   messages: HHMessage[],
   signal?: AbortSignal
 ): Promise<string> {
-  if (settings.llmProvider === "anthropic" && settings.anthropicApiKey) {
-    return callAnthropic(settings.anthropicApiKey, systemPrompt, messages, signal);
-  }
   if (settings.openaiApiKey) {
     return callOpenAI(settings.openaiApiKey, systemPrompt, messages, signal);
   }

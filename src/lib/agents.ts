@@ -1,4 +1,4 @@
-import { LayoutTemplate, Code, Palette, ShieldCheck, Users } from "lucide-react";
+import { LayoutTemplate, Code, Palette, ShieldCheck, Users, Sparkles, Wand2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface Agent {
@@ -51,4 +51,21 @@ export const FINAL_AGENT = {
   color: "bg-violet-500/20",
   textColor: "text-violet-400",
   statusMessage: "✅ Сайт полностью готов!",
+};
+
+// Auto-improve design agents
+export const AUTO_IMPROVE_AGENT = {
+  name: "AI-Дизайнер",
+  icon: Wand2,
+  color: "bg-cyan-500/20",
+  textColor: "text-cyan-400",
+  statusMessage: "Анализирую дизайн и улучшаю его...",
+};
+
+export const AUTO_IMPROVE_DONE_AGENT = {
+  name: "AI-Дизайнер",
+  icon: Sparkles,
+  color: "bg-cyan-500/20",
+  textColor: "text-cyan-400",
+  statusMessage: "✨ Дизайн улучшен!",
 };

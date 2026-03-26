@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Sparkles, LogOut, Zap, Shield, Globe, BarChart2, Database, Building2 } from "lucide-react";
+import { ArrowRight, Sparkles, LogOut, Zap, Shield, Globe, BarChart2, Database, Building2, Scan, Rocket, ClipboardList, Megaphone, GraduationCap, Microscope, Users, MessageSquare, Palette, Battery } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -19,12 +19,12 @@ const features = [
   { Icon: Building2, color: "#ec4899", title: "Инфраструктура уровня Enterprise", desc: "Готовность к SOC 2 Type II, GDPR и HIPAA. 99.99% uptime SLA, выделенная поддержка и индивидуальные контракты." },
 ];
 const personas = [
-  { emoji: "🚀", tag: "Предприниматели", name: "Запускайте MVP за считанные часы", desc: "Переходите от идеи к работающему продукту раньше, чем остынет ваш кофе. Сооснователь или CTO не нужны.", color: "#8b5cf6" },
-  { emoji: "📋", tag: "Продакт-менеджеры", name: "Прототипируйте без инженеров", desc: "Создавайте интерактивные прототипы, которые действительно работают. Лучше показать, чем объяснять на следующей встрече.", color: "#6366f1" },
-  { emoji: "📣", tag: "Маркетологи", name: "Быстро запускайте landing pages", desc: "Создавайте кампании и микросайты с высокой конверсией, не дожидаясь очереди у команды разработки.", color: "#06b6d4" },
-  { emoji: "🏢", tag: "Агентства", name: "Увеличьте клиентскую отдачу в 10×", desc: "Сдавайте polished-проекты для клиентов за долю прежнего времени. Подходит для white-label по умолчанию.", color: "#f59e0b" },
-  { emoji: "🎓", tag: "Студенты и создатели", name: "Учитесь, создавая реальные вещи", desc: "Лучший способ учиться — делать что-то настоящее. Переходите от tutorial к задеплоенному приложению уже в первый день.", color: "#10b981" },
-  { emoji: "🔬", tag: "Исследователи", name: "Мгновенно визуализируйте данные", desc: "Превращайте сложные наборы данных в интерактивные dashboards и инструменты для исследований за считанные минуты.", color: "#ec4899" },
+  { icon: Rocket, tag: "Предприниматели", name: "Запускайте MVP за считанные часы", desc: "Переходите от идеи к работающему продукту раньше, чем остынет ваш кофе. Сооснователь или CTO не нужны.", color: "#8b5cf6" },
+  { icon: ClipboardList, tag: "Продакт-менеджеры", name: "Прототипируйте без инженеров", desc: "Создавайте интерактивные прототипы, которые действительно работают. Лучше показать, чем объяснять на следующей встрече.", color: "#6366f1" },
+  { icon: Megaphone, tag: "Маркетологи", name: "Быстро запускайте landing pages", desc: "Создавайте кампании и микросайты с высокой конверсией, не дожидаясь очереди у команды разработки.", color: "#06b6d4" },
+  { icon: Building2, tag: "Агентства", name: "Увеличьте клиентскую отдачу в 10×", desc: "Сдавайте polished-проекты для клиентов за долю прежнего времени. Подходит для white-label по умолчанию.", color: "#f59e0b" },
+  { icon: GraduationCap, tag: "Студенты и создатели", name: "Учитесь, создавая реальные вещи", desc: "Лучший способ учиться — делать что-то настоящее. Переходите от tutorial к задеплоенному приложению уже в первый день.", color: "#10b981" },
+  { icon: Microscope, tag: "Исследователи", name: "Мгновенно визуализируйте данные", desc: "Превращайте сложные наборы данных в интерактивные dashboards и инструменты для исследований за считанные минуты.", color: "#ec4899" },
 ];
 const testimonials = [
   { text: "HelpHand сократил время нашего цикла разработки с недель до дней. Это буквально изменило наш бизнес.", author: "Алексей М.", role: "CTO, TechStart" },
@@ -627,7 +627,7 @@ const HelpHandLanding = () => {
         </div>
         <div className="hh-hero-content">
           <div className="hh-badge">
-            <span className="hh-badge-pill">⚡</span>
+            <span className="hh-badge-pill"><Zap size={14} /></span>
             <span className="hh-badge-live" />
             AI-платформа нового поколения — vibe coding
           </div>
@@ -641,7 +641,10 @@ const HelpHandLanding = () => {
             <button className="hh-cta-main" type="button" onClick={handleStart}>
               Начать бесплатно <ArrowRight size={18} />
             </button>
-            <button className="hh-cta-ghost" type="button">
+            <button className="hh-cta-ghost" type="button" onClick={() => window.open('/ar.html', '_blank')}>
+              <Scan size={18} /> AR режим
+            </button>
+            <button className="hh-cta-ghost" type="button" onClick={handleStart}>
               Смотреть демо ▸
             </button>
           </div>
@@ -713,7 +716,7 @@ const HelpHandLanding = () => {
       <section className="hh-section">
         <div className="hh-container hh-row">
           <div className="hh-reveal">
-            <div className="hh-eyebrow">⚡ Для тех, кто создаёт</div>
+            <div className="hh-eyebrow"><Zap size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> Для тех, кто создаёт</div>
             <h2 className="hh-title">
               <span className="hh-grad">На 98% меньше ошибок.</span><br />
               Запускайте с уверенностью.
@@ -759,7 +762,7 @@ const HelpHandLanding = () => {
       <section className="hh-section">
         <div className="hh-container hh-row flip">
           <div className="hh-reveal">
-            <div className="hh-eyebrow">🚀 Масштабируйтесь смело</div>
+            <div className="hh-eyebrow"><Rocket size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> Масштабируйтесь смело</div>
             <h2 className="hh-title">
               Масштабируйтесь без<br /><span className="hh-grad">поломок.</span>
             </h2>
@@ -792,7 +795,7 @@ const HelpHandLanding = () => {
       <section className="hh-section">
         <div className="hh-container hh-row">
           <div className="hh-reveal">
-            <div className="hh-eyebrow">🎨 Ваш бренд</div>
+            <div className="hh-eyebrow"><Palette size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> Ваш бренд</div>
             <h2 className="hh-title">
               Создавайте со своей<br /><span className="hh-grad">design system.</span>
             </h2>
@@ -838,7 +841,7 @@ const HelpHandLanding = () => {
       <section className="hh-section" style={{ background: "var(--bg2)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
         <div className="hh-container">
           <div className="hh-features-head hh-reveal">
-            <div className="hh-eyebrow">🔋 Full-stack</div>
+            <div className="hh-eyebrow"><Battery size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> Full-stack</div>
             <h2 className="hh-title">Всё, что вам нужно.<br /><span className="hh-grad">Сразу из коробки.</span></h2>
             <p className="hh-body" style={{ marginTop: 16 }}>
               HelpHand генерирует полноценные приложения — а не только UI-макеты. Каждое приложение готово к production.
@@ -861,7 +864,7 @@ const HelpHandLanding = () => {
       {/* ── PERSONAS ── */}
       <section className="hh-section" style={{ paddingBottom: 0 }}>
         <div className="hh-personas-head hh-reveal">
-          <div className="hh-eyebrow">👥 Для всех</div>
+          <div className="hh-eyebrow"><Users size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> Для всех</div>
           <h2 className="hh-title">Кто создаёт с HelpHand?</h2>
           <p className="hh-body" style={{ marginTop: 14 }}>От начинающих основателей до команд Fortune 500 — HelpHand подстраивается под ваш стиль работы.</p>
         </div>
@@ -870,7 +873,7 @@ const HelpHandLanding = () => {
         <div className="hh-personas-track">
           {personas.map((p, i) => (
             <article key={p.name} className={`hh-persona hh-reveal ${i ? `hh-d${Math.min(i, 5)}` : ""}`}>
-              <span className="hh-persona-emoji">{p.emoji}</span>
+              <span className="hh-persona-emoji" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><p.icon size={24} color={p.color} /></span>
               <div className="hh-persona-tag" style={{ color: p.color }}>{p.tag}</div>
               <h3>{p.name}</h3>
               <p>{p.desc}</p>
@@ -883,7 +886,7 @@ const HelpHandLanding = () => {
       <section className="hh-testimonials">
         <div className="hh-container">
           <div className="hh-reveal">
-            <div className="hh-eyebrow">💬 Отзывы</div>
+            <div className="hh-eyebrow"><MessageSquare size={14} style={{ display: "inline", verticalAlign: "-2px" }} /> Отзывы</div>
             <h2 className="hh-title">Что говорят пользователи</h2>
           </div>
           <div className="hh-testi-grid">

@@ -59,7 +59,7 @@ const EditorToolbar = ({ projectName, onExport, onShare, helpHandStatus = "off",
           <Download size={14} />
           <span className="hidden sm:inline">ZIP</span>
         </Button>
-        <Button size="sm" className="text-xs gap-1.5">
+        <Button size="sm" className="text-xs gap-1.5" disabled title="Скоро">
           <Globe size={14} />
           <span className="hidden sm:inline">Опубликовать</span>
         </Button>

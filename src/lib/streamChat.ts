@@ -58,16 +58,18 @@ export async function streamChat({
 }: {
   messages: Msg[];
   onDelta: (deltaText: string) => void;
-  onDone: () => void;
+  onDone: () => void | Promise<void>;
   currentCode?: string;
 }) {
-  const apiKey = import.meta.env.VITE_HELPHAND_OPENAI_KEY;
+  const apiKey = import.meta.env.VITE_OPENAI_CODE_KEY || import.meta.env.VITE_HELPHAND_OPENAI_KEY;
   if (!apiKey) {
-    throw new Error("OpenAI API ключ не настроен. Добавьте VITE_HELPHAND_OPENAI_KEY в .env.local");
+    throw new Error("OpenAI API ключ не настроен. Добавьте VITE_OPENAI_CODE_KEY в .env.local");
   }
 
-  // Filter out system agent messages before sending to AI
-  const apiMessages = messages.filter(m => m.role !== "system");
+  const model = import.meta.env.VITE_CODE_MODEL || "gpt-5.2";
+
+  // Filter out agent status messages (system role with agent field) before sending to AI
+  const apiMessages = messages.filter(m => !(m.role === "system" && m.agent));
 
   // If there's existing code, include it so the AI modifies it instead of starting from scratch
   let systemPrompt = SYSTEM_PROMPT;
@@ -85,7 +87,7 @@ export async function streamChat({
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         ...apiMessages,
@@ -105,54 +107,191 @@ export async function streamChat({
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let textBuffer = "";
-  let streamDone = false;
 
-  while (!streamDone) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    textBuffer += decoder.decode(value, { stream: true });
+  function processLine(line: string): boolean {
+    if (line.endsWith("\r")) line = line.slice(0, -1);
+    if (line.startsWith(":") || line.trim() === "") return false;
+    if (!line.startsWith("data: ")) return false;
+
+    const jsonStr = line.slice(6).trim();
+    if (jsonStr === "[DONE]") return true;
+
+    try {
+      const parsed = JSON.parse(jsonStr);
+      const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+      if (content) onDelta(content);
+    } catch {
+      // Malformed JSON chunk — skip it instead of re-buffering (which could cause infinite loops)
+    }
+    return false;
+  }
+
+  let done = false;
+  while (!done) {
+    const result = await reader.read();
+    if (result.done) break;
+    textBuffer += decoder.decode(result.value, { stream: true });
 
     let newlineIndex: number;
     while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-      let line = textBuffer.slice(0, newlineIndex);
+      const line = textBuffer.slice(0, newlineIndex);
       textBuffer = textBuffer.slice(newlineIndex + 1);
 
-      if (line.endsWith("\r")) line = line.slice(0, -1);
-      if (line.startsWith(":") || line.trim() === "") continue;
-      if (!line.startsWith("data: ")) continue;
-
-      const jsonStr = line.slice(6).trim();
-      if (jsonStr === "[DONE]") {
-        streamDone = true;
-        break;
-      }
-
-      try {
-        const parsed = JSON.parse(jsonStr);
-        const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
-      } catch {
-        textBuffer = line + "\n" + textBuffer;
+      if (processLine(line)) {
+        done = true;
         break;
       }
     }
   }
 
+  // Process any remaining data in the buffer
   if (textBuffer.trim()) {
-    for (let raw of textBuffer.split("\n")) {
-      if (!raw) continue;
-      if (raw.endsWith("\r")) raw = raw.slice(0, -1);
-      if (raw.startsWith(":") || raw.trim() === "") continue;
-      if (!raw.startsWith("data: ")) continue;
-      const jsonStr = raw.slice(6).trim();
-      if (jsonStr === "[DONE]") continue;
-      try {
-        const parsed = JSON.parse(jsonStr);
-        const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
-      } catch { /* ignore */ }
+    for (const raw of textBuffer.split("\n")) {
+      if (!raw || raw.trim() === "") continue;
+      processLine(raw);
     }
   }
 
-  onDone();
+  await onDone();
+}
+
+const AUTO_IMPROVE_PROMPT = `Ты — senior UI/UX дизайнер. Тебе дан HTML-код сайта. Твоя задача — УЛУЧШИТЬ его дизайн.
+
+ПРАВИЛА:
+- Отвечай ТОЛЬКО кодом — полный HTML документ. Никаких пояснений.
+- Сохрани ВСЮ существующую функциональность и контент.
+- НЕ меняй структуру и текст — только визуал.
+
+ЧТО УЛУЧШАТЬ:
+- Цветовая палитра: более гармоничные и современные цвета, градиенты.
+- Типография: лучшая иерархия, межстрочные интервалы, размеры.
+- Отступы и spacing: больше воздуха, ритм.
+- Hover-эффекты и микро-анимации (transition, transform).
+- Тени (box-shadow) для глубины.
+- Скругления (border-radius) — современный вид.
+- Кнопки: стильнее, с hover-эффектами.
+- Общий "polish" — чтобы сайт выглядел профессионально и современно.
+
+ИЗОБРАЖЕНИЯ: НЕ меняй URL изображений.`;
+
+export async function streamAutoImprove({
+  currentCode,
+  onDelta,
+  onDone,
+}: {
+  currentCode: string;
+  onDelta: (deltaText: string) => void;
+  onDone: () => void | Promise<void>;
+}) {
+  const apiKey = import.meta.env.VITE_OPENAI_CODE_KEY || import.meta.env.VITE_HELPHAND_OPENAI_KEY;
+  if (!apiKey) throw new Error("OpenAI API ключ не настроен");
+
+  const model = import.meta.env.VITE_CODE_MODEL || "gpt-5.2";
+
+  const truncated = currentCode.length > 12000
+    ? currentCode.slice(0, 12000) + "\n... (обрезано)"
+    : currentCode;
+
+  const resp = await fetch(OPENAI_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: AUTO_IMPROVE_PROMPT },
+        { role: "user", content: `Улучши дизайн этого сайта:\n\n\`\`\`html\n${truncated}\n\`\`\`` },
+      ],
+      stream: true,
+    }),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json().catch(() => ({ error: { message: "Ошибка соединения" } }));
+    throw new Error(errorData.error?.message || `HTTP ${resp.status}`);
+  }
+
+  if (!resp.body) throw new Error("No response body");
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let textBuffer = "";
+
+  function processLine(line: string): boolean {
+    if (line.endsWith("\r")) line = line.slice(0, -1);
+    if (line.startsWith(":") || line.trim() === "") return false;
+    if (!line.startsWith("data: ")) return false;
+    const jsonStr = line.slice(6).trim();
+    if (jsonStr === "[DONE]") return true;
+    try {
+      const parsed = JSON.parse(jsonStr);
+      const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+      if (content) onDelta(content);
+    } catch {}
+    return false;
+  }
+
+  let done = false;
+  while (!done) {
+    const result = await reader.read();
+    if (result.done) break;
+    textBuffer += decoder.decode(result.value, { stream: true });
+    let newlineIndex: number;
+    while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+      const line = textBuffer.slice(0, newlineIndex);
+      textBuffer = textBuffer.slice(newlineIndex + 1);
+      if (processLine(line)) { done = true; break; }
+    }
+  }
+  if (textBuffer.trim()) {
+    for (const raw of textBuffer.split("\n")) {
+      if (!raw || raw.trim() === "") continue;
+      processLine(raw);
+    }
+  }
+
+  await onDone();
+}
+
+export async function getImprovementSummary(oldCode: string, newCode: string): Promise<string> {
+  const apiKey = import.meta.env.VITE_OPENAI_CODE_KEY || import.meta.env.VITE_HELPHAND_OPENAI_KEY;
+  if (!apiKey) return "Дизайн был улучшен.";
+
+  const model = import.meta.env.VITE_CODE_MODEL || "gpt-5.2";
+
+  const oldSnippet = oldCode.slice(0, 4000);
+  const newSnippet = newCode.slice(0, 4000);
+
+  try {
+    const resp = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: "Ты — помощник. Сравни два HTML-кода сайта и кратко опиши, какие визуальные улучшения были сделаны. Ответь на русском языке, 1-3 предложения. Без технических деталей — опиши для обычного пользователя.",
+          },
+          {
+            role: "user",
+            content: `БЫЛО:\n\`\`\`html\n${oldSnippet}\n\`\`\`\n\nСТАЛО:\n\`\`\`html\n${newSnippet}\n\`\`\``,
+          },
+        ],
+        max_completion_tokens: 200,
+      }),
+    });
+
+    if (!resp.ok) return "Дизайн сайта был улучшен.";
+
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content?.trim() || "Дизайн сайта был улучшен.";
+  } catch {
+    return "Дизайн сайта был улучшен.";
+  }
 }

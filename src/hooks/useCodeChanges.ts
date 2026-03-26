@@ -43,8 +43,10 @@ function diffSummary(prev: string, next: string): string {
   const prevLines = prev.split("\n");
   const nextLines = next.split("\n");
 
-  const added = nextLines.filter((l) => !prevLines.includes(l)).length;
-  const removed = prevLines.filter((l) => !nextLines.includes(l)).length;
+  const prevSet = new Set(prevLines);
+  const nextSet = new Set(nextLines);
+  const added = nextLines.filter((l) => !prevSet.has(l)).length;
+  const removed = prevLines.filter((l) => !nextSet.has(l)).length;
 
   if (added === 0 && removed === 0) return "";
 
@@ -53,8 +55,10 @@ function diffSummary(prev: string, next: string): string {
   // Detect structural changes
   const prevTags = extractTags(prev);
   const nextTags = extractTags(next);
-  const newTags = nextTags.filter((t) => !prevTags.includes(t));
-  const removedTags = prevTags.filter((t) => !nextTags.includes(t));
+  const prevTagSet = new Set(prevTags);
+  const nextTagSet = new Set(nextTags);
+  const newTags = nextTags.filter((t) => !prevTagSet.has(t));
+  const removedTags = prevTags.filter((t) => !nextTagSet.has(t));
 
   if (newTags.length > 0) parts.push(`Добавлены элементы: ${newTags.slice(0, 5).join(", ")}`);
   if (removedTags.length > 0) parts.push(`Удалены элементы: ${removedTags.slice(0, 5).join(", ")}`);

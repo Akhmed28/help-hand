@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Mic, MicOff } from "lucide-react";
+import { ArrowRight, Sparkles, Mic, MicOff, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
@@ -104,7 +104,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="flex justify-center mt-6 md:mt-8"
+            className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6 md:mt-8"
           >
             <Button
               onClick={handleGenerate}
@@ -112,6 +112,14 @@ const HeroSection = () => {
             >
               Начать создавать
               <ArrowRight size={22} className="ml-2" />
+            </Button>
+            <Button
+              onClick={() => window.open('/ar.html', '_blank')}
+              variant="outline"
+              className="w-full sm:w-auto text-base py-5 px-8 md:py-6 md:px-10 rounded-2xl font-bold tracking-wide h-auto border-primary/30 hover:border-primary/60"
+            >
+              <Scan size={22} className="mr-2" />
+              AR режим
             </Button>
           </motion.div>
 

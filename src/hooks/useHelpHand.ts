@@ -105,7 +105,7 @@ export function useHelpHand(
     async (text: string) => {
       lastActivityRef.current = Date.now(); // user is active
       const s = settingsRef.current;
-      const apiKey = s.llmProvider === "openai" ? s.openaiApiKey : s.anthropicApiKey;
+      const apiKey = s.openaiApiKey;
 
       console.log("[HelpHand] sendMessage called", { text, enabled: s.enabled, hasKey: !!apiKey });
 
@@ -204,7 +204,7 @@ export function useHelpHand(
       } finally {
         setIsThinking(false);
         const cur = settingsRef.current;
-        const curKey = cur.llmProvider === "openai" ? cur.openaiApiKey : cur.anthropicApiKey;
+        const curKey = cur.openaiApiKey;
         setStatus(cur.enabled && curKey ? "active" : "off");
       }
     },
@@ -214,7 +214,7 @@ export function useHelpHand(
   // Proactive analysis
   const runAnalysis = useCallback(async () => {
     const s = settingsRef.current;
-    const apiKey = s.llmProvider === "openai" ? s.openaiApiKey : s.anthropicApiKey;
+    const apiKey = s.openaiApiKey;
     if (!apiKey || !s.enabled) return;
 
     // Don't run if already thinking (e.g. processing a fix)
@@ -297,7 +297,7 @@ export function useHelpHand(
     } finally {
       setIsThinking(false);
       const cur = settingsRef.current;
-      const curKey = cur.llmProvider === "openai" ? cur.openaiApiKey : cur.anthropicApiKey;
+      const curKey = cur.openaiApiKey;
       setStatus(cur.enabled && curKey ? "active" : "off");
     }
   }, [generatedCode, onSpeak, iframeErrors, recentChanges]);

@@ -18,6 +18,8 @@ export function useIframeErrors() {
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
+      // Only accept messages from same origin or srcdoc iframes (origin "null")
+      if (event.origin !== window.location.origin && event.origin !== "null") return;
       if (event.data?.source !== "helphand-preview") return;
 
       const err: IframeError = {

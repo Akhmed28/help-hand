@@ -17,19 +17,25 @@ const viewportWidths: Record<Viewport, string> = {
 
 const PreviewPanel = ({ code }: PreviewPanelProps) => {
   const [viewport, setViewport] = useState<Viewport>("desktop");
-  const safeCode = useMemo(() => (code ? injectErrorCatcher(code) : ""), [code]);
+  const safeCode = useMemo(() => {
+    if (!code) return "";
+    const hideScrollbarCSS = `<style>html,body{scrollbar-width:none;-ms-overflow-style:none;}::-webkit-scrollbar{display:none;}</style>`;
+    let html = injectErrorCatcher(code);
+    if (html.includes("<head>")) {
+      html = html.replace("<head>", "<head>" + hideScrollbarCSS);
+    } else if (html.includes("<HEAD>")) {
+      html = html.replace("<HEAD>", "<HEAD>" + hideScrollbarCSS);
+    } else {
+      html = hideScrollbarCSS + html;
+    }
+    return html;
+  }, [code]);
 
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Browser chrome */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-accent/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-primary/60" />
-        </div>
-
-        <div className="flex-1 mx-4 max-w-md">
+        <div className="flex-1 max-w-md mx-auto">
           <div className="bg-secondary rounded-md px-3 py-1 text-xs text-muted-foreground text-center truncate">
             preview.helphand.app
           </div>
@@ -55,17 +61,18 @@ const PreviewPanel = ({ code }: PreviewPanelProps) => {
       </div>
 
       {/* Preview area */}
-      <div className="flex-1 flex items-start justify-center overflow-auto p-4 bg-muted/30">
+      <div className="flex-1 flex items-start justify-center overflow-hidden p-4 bg-muted/30">
         {code ? (
           <iframe
             srcDoc={safeCode}
-            sandbox="allow-scripts allow-same-origin allow-modals"
+            sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
             className="bg-white rounded-lg shadow-2xl transition-all duration-300"
             style={{
               width: viewportWidths[viewport],
               maxWidth: "100%",
               height: "100%",
               border: "none",
+              display: "block",
             }}
             title="Preview"
           />
